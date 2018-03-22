@@ -26,18 +26,20 @@ SECRET_KEY = 'h3%con(3@4ss456m^93$gz*i+77bciv48^(e+@#1u03my9_4zy'
 DEBUG = True
 
 ALLOWED_HOSTS = []
+# django-debug-toolbarはINTERNAL_IPSからの通信でのみ有効になるため、VMのNATのアドレスを入れています
+INTERNAL_IPS = ['']
 
 
 # Application definition
 
 INSTALLED_APPS = [
-    'noteapp.apps.NoteappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'noteapp.apps.NoteappConfig',
 ]
 
 MIDDLEWARE = [
@@ -50,12 +52,21 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+#　デバッグ時のみミドルウェアを有効にします。
+if DEBUG:
+    MIDDLEWARE.append(
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    )
+
 ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            # プロジェクト直下のtemplatesディレクトリにテンプレートファイルをまとめるのに必要
+            os.path.join(BASE_DIR, 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -119,3 +130,23 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# ビルドされたクライアントアプリケーションをDjangoのstaticfilesから参照します
+STATICFIELES_DIR = [
+    ('client', os.path.join(os.path.dirname(BASE_DIR), 'note_client/build')),
+]
+
+# collectstaticの出力先
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
+LOGIN_URL = '/login'
+# ログイン後のリダイレクト先
+LOGIN_REDIRECT_URL = 'index'
+
+# DjangoRestFramework
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # request.userを使う
+    'rest_framework.authentication.SessionAuthentication',
+    )
+}
